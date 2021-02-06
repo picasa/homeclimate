@@ -1,0 +1,57 @@
+
+```{r setup}
+library(jsonlite)
+library(tidyverse)
+
+source("R/keys.r")
+```
+
+
+```{r data_scd30}
+# style
+list_colors = c("#2CA02CFF","#1F77B4FF","#FF7F0EFF")
+label_variables <- as_labeller(c("co2" = "co2 [ppm]", "rh" = "rh [%]", "temp" = "temp [°C]"))
+
+table_threshold <- tibble(
+  name = c("co2","rh","temp"),
+  value = c(800, 50, 19))
+
+# parameters
+value_days = 10
+list_variables = c("co2","rh") 
+
+# query thingspeak channel
+url_base = glue::glue("https://api.thingspeak.com/channels/{id_thingspeak}/feeds.json?")
+url_query = glue::glue(url_base, "api_key={key_read}", "&days={value_days}")
+data_sensor_raw <- read_json(url_query, simplifyVector = TRUE)
+
+# shape raw data
+data_sensor <- tibble(data_sensor_raw$feeds) %>% 
+  mutate(time = lubridate::ymd_hms(created_at, tz = "Europe/Paris")) %>% 
+  mutate(across(field1:field3, as.numeric)) %>% 
+  select(time, co2 = field1, temp = field2, rh = field3) %>% 
+  pivot_longer(cols = co2:rh) 
+
+# plot selected data
+plot_sensor <- data_sensor %>% 
+  filter(name %in% list_variables) %>% 
+  ggplot(aes(x = time, y = value, color = name)) +
+  geom_line(alpha = 0.8) +
+  stat_smooth (
+    geom = "line", alpha = 0.3, size = 3,
+    method = "gam", formula = y ~ s(x, k = 12)) +
+  geom_hline(
+    data = table_threshold %>% filter(name %in% list_variables),
+    aes(yintercept = value), linetype = 2) + 
+  facet_wrap(vars(name), scale = "free_y", labeller = label_variables) +
+  scale_color_manual(values = list_colors) + labs(x=NULL, y=NULL) +
+  theme_bw() + theme(legend.position = "none")
+
+# export graphics and data
+ggsave(
+  plot_sensor, file = "R/figures/sensor_scd30.png",
+  dpi=120, width=210, height=100, scale=1, units="mm")
+
+# write_rds(data_sensor, file = glue::glue("data/archive_", format(Sys.time(), "%Y%m%d"),".rds"))
+```
+
