@@ -8,17 +8,8 @@ source("R/keys.r")
 
 
 ```{r data_scd30}
-# style
-list_colors = c("#2CA02CFF","#1F77B4FF","#FF7F0EFF")
-label_variables <- as_labeller(c("co2" = "co2 [ppm]", "rh" = "rh [%]", "temp" = "temp [°C]"))
-
-table_threshold <- tibble(
-  name = c("co2","rh","temp"),
-  value = c(800, 50, 19))
-
 # parameters
 value_days = 10
-list_variables = c("co2","rh") 
 
 # query thingspeak channel
 url_base = glue::glue("https://api.thingspeak.com/channels/{id_thingspeak}/feeds.json?")
@@ -32,7 +23,24 @@ data_sensor <- tibble(data_sensor_raw$feeds) %>%
   select(time, co2 = field1, temp = field2, rh = field3) %>% 
   pivot_longer(cols = co2:rh) 
 
+
+# write_rds(data_sensor, file = glue::glue("data/archive_", format(Sys.time(), "%Y%m%d"),".rds"))
+```
+
+```{r plot_scd30}
+
+# style
+list_variables = c("co2","rh") 
+list_colors = c("#2CA02CFF","#1F77B4FF","#FF7F0EFF")
+label_variables <- as_labeller(c("co2" = "co2 [ppm]", "rh" = "rh [%]", "temp" = "temp [°C]"))
+
+table_threshold <- tibble(
+  name = c("co2","rh","temp"),
+  value = c(800, 50, 19))
+
 # plot selected data
+# data_sensor <- readr::read_rds("data/archive_20210206.rds")
+
 plot_sensor <- data_sensor %>% 
   filter(name %in% list_variables) %>% 
   ggplot(aes(x = time, y = value, color = name)) +
@@ -52,6 +60,6 @@ ggsave(
   plot_sensor, file = "R/figures/sensor_scd30.png",
   dpi=120, width=210, height=100, scale=1, units="mm")
 
-# write_rds(data_sensor, file = glue::glue("data/archive_", format(Sys.time(), "%Y%m%d"),".rds"))
+
 ```
 
