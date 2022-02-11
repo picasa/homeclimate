@@ -27,5 +27,6 @@ Additionally, when the board is connected to the internet by WiFi, the measured 
 ### Software
 
 1. use your favorite IDE to upload the code ([ino](src/scd30/scd30_iot.ino) file) to the ESP32. Three arduino libraries are necessary : mathworks/ThingSpeak @ 2.0.0, adafruit/Adafruit DotStar@^1.1.4, Seeed-Studio SCD30 ([link](https://github.com/Seeed-Studio/Seeed_SCD30.git))
+2. you can retrieve and analyre logged data by using this example R script ([link](R/homeclimate.rmd)), that produced the figure below.
 
 ![](R/figures/sensor_scd30.png)
